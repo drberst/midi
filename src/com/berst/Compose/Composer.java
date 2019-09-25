@@ -1,5 +1,6 @@
 package com.berst.Compose;
 
+import com.berst.Model.Note;
 import java.util.ArrayList;
 import java.util.HashMap;
 import javax.sound.midi.InvalidMidiDataException;
@@ -9,8 +10,8 @@ public class Composer {
 //  Track mainTrack;
 //  int ticks = 30;
 //  double ticklen = 250;
-  int low = 50;
-  int high = 70;
+  int low = 100;
+  int high = 0;
 
   ArrayList<ArrayList<Integer>> matrix;
 
@@ -56,6 +57,7 @@ public class Composer {
     for (int i = start; i < end; i++) {
       add(i, note);
     }
+//    System.out.printf("Added %d(%s) at [%d->%d]\n",note,new Note(note),start,end);
   }
 
   public void add(Integer tick, Integer val) {
@@ -117,15 +119,45 @@ public class Composer {
     }
     return result;
   }
-  
-  private String[] pianoRollLines() {
+  public String pianoRollHeader(int indent) {
+    StringBuilder sb = new StringBuilder();
+    sb.append(String.format("%"+indent+"s",""));
+    for (int note = low; note < high; note++) {
+      sb.append(String.format("%-3s|",new Note(note).smallString()));
+    }
+    return sb.toString();
+  }
+  public String[] pianoRollLines() {
+    String[] result = new String[matrix.size()];
+
+    for (int tick = 0; tick < matrix.size(); tick++) {
+      StringBuilder sb = new StringBuilder();
+      for (int note = low; note < high; note++) {
+        String val = String.format("%4s","|");
+        ArrayList<Integer> notesThisTick = getNotes(tick);
+        for (int i = 0; i < notesThisTick.size(); i++) {
+          if(notesThisTick.get(i) == note) val = String.format("%-3s|",new Note((note)).smallString());
+        }
+//        if (getNotes(tick).contains(note)) val = String.format("%3d",);
+        sb.append(val);
+      }
+      result[tick] = sb.toString();
+    }
+    return result;
+  }
+
+  public String[] pianoRollLines2() {
     String[] result = new String[matrix.size()];
 
     for (int tick = 0; tick < matrix.size(); tick++) {
       StringBuilder sb = new StringBuilder();
       for (int note = low; note < high; note++) {
         String val = String.format("%3s","");
-        if (getNotes(tick).contains(note)) val = "  x";
+        ArrayList<Integer> notesThisTick = getNotes(tick);
+        for (int i = 0; i < notesThisTick.size(); i++) {
+          if(notesThisTick.get(i) == note) val = String.format("%3d",i);
+        }
+//        if (getNotes(tick).contains(note)) val = String.format("%3d",);
         sb.append(val);
       }
       result[tick] = sb.toString();
@@ -191,5 +223,21 @@ public class Composer {
       }
     }
     return c;
+  }
+  @Override
+  public String toString() {
+    String[] lines = pianoRollLines();
+    StringBuilder result = new StringBuilder();
+    for (int i = 0; i < lines.length; i++) {
+      if (i%15==0) {
+        result.append(("   "));
+        for (int j = low; j < high; j++) {
+          result.append(String.format("%3d",j));
+        }
+        result.append("\n");
+      }
+      result.append(String.format("%d: %s\n",i,lines[i]));
+    }
+    return result.toString();
   }
 }

@@ -35,6 +35,11 @@ public class Player {
     addLines(numberOfLines);
   }
 
+  public static void setBPM(Integer BPM) {
+    Player.BPM = BPM;
+    Player.ticklen = (int) Math.round((60f / BPM) * 1000);
+  }
+
   public static void main(String[] args) throws LineUnavailableException {
     String[] tab = new String[]{
         //1 2 3 4 2 2 3 4 3 2 3 4 4 2 3 4 5 2 3 4 6 2 3 4 7 2 3 4 8 2 3 4 9 2 3 4
@@ -72,24 +77,55 @@ public class Player {
 //    click();
     open();
     start();
+    System.out.printf("Playing: %d lines : %d tracks : buffer=%d\n",aComposer.ticks(),aComposer.tracks(),SAMPLE_RATE);
+    String[] lines = aComposer.pianoRollLines();
     for (int tick = 0; tick < aComposer.ticks(); tick++) {
-    StringBuilder sb = new StringBuilder();
-//      printLines();
+      StringBuilder sb = new StringBuilder();
       ArrayList<Integer> aLine = aComposer.getNotes(tick);
-      if (lines.size() < aLine.size()) {
-        addLines(lines.size() - aLine.size());
-      }
+//      if (lines.size() < aLine.size()) {
+//        addLines(lines.size() - aLine.size());
+//      }
       sb.append(String.format("%3d: ", tick));
 
-      for (int i = 0; i < aLine.size(); i++) {
+      for (int i = 0; i < 1; i++) {
         int note = aLine.get(i);
         double freq = hz(note);
 
         int written = play(i, freq, ticklen);
+        sb.append(" "+written+" ");
 //        int written = send(i, wave(freq), ticklen);
-        sb.append(String.format("[%d:%2d]",i,note));
+//        sb.append(String.format("[%d:%2d]",i,note));
+        sb.append(lines[tick]);
       }
-    System.out.println(sb.toString());
+      System.out.println(sb.toString());
+    }
+    close();
+  }
+  public void playComposition2(Composer aComposer) throws LineUnavailableException {
+//    click();
+    open();
+    start();
+    System.out.printf("Playing: %d lines : %d tracks : buffer=%d\n",aComposer.ticks(),aComposer.tracks(),SAMPLE_RATE);
+    String[] lines = aComposer.pianoRollLines();
+    for (int tick = 0; tick < aComposer.ticks(); tick++) {
+      StringBuilder sb = new StringBuilder();
+      ArrayList<Integer> aLine = aComposer.getNotes(tick);
+//      if (lines.size() < aLine.size()) {
+//        addLines(lines.size() - aLine.size());
+//      }
+      sb.append(String.format("%3d: ", tick));
+
+      for (int i = 0; i < 1; i++) {
+        int note = aLine.get(i);
+        double freq = hz(note);
+
+        int written = play(i, freq, ticklen);
+        sb.append(" "+written+" ");
+//        int written = send(i, wave(freq), ticklen);
+//        sb.append(String.format("[%d:%2d]",i,note));
+        sb.append(lines[tick]);
+      }
+      System.out.println(sb.toString());
     }
     close();
   }
@@ -184,16 +220,6 @@ public class Player {
     System.out.printf("started %d lines\n", lines.size());
   }
 
-//  public void stop() {
-//    for (SourceDataLine line : lines) {
-//      while (line.isActive()) {
-//      }
-//      ;
-////      line.stop();
-//    }
-//    System.out.printf("stopped %d lines\n", lines.size());
-//  }
-
   public void open() throws LineUnavailableException {
     for (SourceDataLine line : lines) {
       line.open(af, SAMPLE_RATE);
@@ -208,25 +234,6 @@ public class Player {
       line.close();
     }
     System.out.printf("closed %d lines\n", lines.size());
-  }
-
-  //  public boolean isPlaying() {
-//    boolean result = false;
-//    for (SourceDataLine line : lines ){
-//      if(line.available() < line.getBufferSize()) {
-//        result = true;
-//        System.out.printf("[L%d: %.2f%% (%d/%d) %.2fms]\n"
-//            ,0,100f-100f*line.available()/line.getBufferSize(),
-//            line.available(),line.getBufferSize(),
-//            line.getMicrosecondPosition()/1000.0);
-//      }
-//    }
-//    return result;
-//  }
-  private static byte[] wave(byte[] waveA, byte[] waveB) {
-    int target = waveA[waveA.length];
-    Math.asin(target);
-    return waveB;
   }
 
   private static byte[] wave(Double frequency) {
@@ -246,89 +253,6 @@ public class Player {
     double exp = ((double) val - 69) / 12d;
     double f = 440d * Math.pow(2d, exp);
     return f;
-  }
-//
-//  private long elapsed() {
-//    return (System.nanoTime() - clickTime) / 1000000;
-//  }
-//
-//  private void click() {
-//    clickTime = System.nanoTime();
-//  }
-
-  //  private static void
-  private static void printWave(byte[] wave, int w, int h) {
-    double step = (1f * wave.length / w);
-    int len = (int) Math.round(wave.length / step);
-    char[][] lines = new char[h][len];
-
-    for (int i = 0; i < lines[0].length; i++) {
-      int index = ab2cdShift(i, 0, w, 0, wave.length);
-      int data = (int) wave[index];
-//      System.out.println(index);
-      int shifted = ab2cdShift(data, -128, 127, 0, h - 1);
-      lines[shifted][i] = '.';
-    }
-    for (int i = 0; i < h; i++) {
-      String out = new String(lines[i]);
-      System.out.printf("%2d| %s\n", i, out);
-    }
-    System.out.println();
-  }
-
-  private static void printWave2(byte[] wave, int w, int h) {
-    boolean flipped = false;
-    if (w < 0) {
-      flipped = true;
-      w *= -1;
-    }
-
-    char[][] lines = new char[h][w];
-
-    for (int i = 0; i < w; i++) {
-      int data = (int) wave[i];
-      if (flipped) {
-        data = (int) (wave[wave.length - w + i]);
-      }
-//      System.out.println(index);
-      int shifted = ab2cdShift(data, -128, 127, 0, h - 1);
-//      int index = ab2cdShift(i,0,w,0, wave.length);
-      lines[shifted][i] = '.';
-    }
-    for (int i = 0; i < h; i++) {
-      String out = new String(lines[i]);
-      System.out.printf("%2d| %s\n", i, out);
-    }
-    System.out.println();
-  }
-
-  private static void printWave3(byte[] wave, int w, int h) {
-    char[] base = new char[w];
-    for (int i = 0; i < w; i++) {
-      base[i] = '.';
-    }
-    String s = "...............................";
-    for (int i = 0; i < wave.length; i++) {
-
-      int data = wave[i];
-      int loc = ab2cdShift(data, -128, 127, 0, w - 1);
-      //      System.out.printf("%"+loc+"s\n",'.');
-      base[loc] = '0';
-      System.out.printf("%4d: %s\n", i, new String(base));
-      base[loc] = '.';
-
-      if (i == h) {
-//        System.out.println("--------------------- Last ");
-        i = wave.length - h;
-      }
-    }
-  }
-
-  private static int ab2cdShift(int val, int a, int b, int c, int d) {
-    // System.out.printf("%d+(%d-%d)/(%d-%d)*(%d-%d)\n",c,d,c,b,a,val,a);
-    double shifted = Math.round((c + 1.0 * (d - c) / (b - a) * (val - a)));
-//    System.out.printf("%d->%.2f\n",val,shifted);
-    return (int) shifted;
   }
 
   private void printLines() {
