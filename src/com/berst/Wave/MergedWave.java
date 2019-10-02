@@ -38,7 +38,35 @@ public class MergedWave {
   public MergedWave(  ArrayList<Sinewave> waves) {
     this.waves = waves;
   }
+  public double getDouble(int t) {
+    double result = 0;
 
+    for (int d = 0; d < waves.size(); d++) {
+      double hz = waves.get(d).hz;
+      result += Math.sin(hz * 2.0 * Math.PI * t);
+
+      if (d > 0) {
+        result /= 2;
+      }
+    }
+    return result;
+  }
+
+  public double[] getDoubles(int cTick, int len) {
+    double[] result = new double[len];
+
+    for (int d = 0; d < waves.size(); d++) {
+      double hz = waves.get(d).hz;
+      for (int t = 0; t < len; t++) {
+        result[t] += getDouble(cTick+t);
+
+        if (d > 0) {
+          result[t] /= 2;
+        }
+      }
+    }
+    return result;
+  }
   public double[] getDoubles(int len) {
     double[] result = new double[len];
 
@@ -56,7 +84,14 @@ public class MergedWave {
     }
     return result;
   }
-
+  public byte[] getBytes(int cTick, int len) {
+    byte[] result = new byte[len];
+    double[] doubles = getDoubles(cTick, len);
+    for (int i = 0; i < len; i++) {
+      result[i] = (byte) Waves.remapRound(doubles[i], -1, 1, Byte.MIN_VALUE, Byte.MAX_VALUE);
+    }
+    return result;
+  }
   public byte[] getBytes(int len) {
     byte[] result = new byte[len];
     double[] doubles = getDoubles(len);

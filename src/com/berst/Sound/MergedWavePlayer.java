@@ -17,6 +17,7 @@ public class MergedWavePlayer {
   static final AudioFormat af = new AudioFormat(SAMPLE_RATE, 16, 1, true, true);
   static SourceDataLine line;
 
+  static boolean PRINT = true;
   public static void main(String[] args) throws Exception{
     Composer c = Midi.readMidi("neverEndingJourney.mid");
     MergedWavePlayer mp = new MergedWavePlayer();
@@ -27,19 +28,21 @@ public class MergedWavePlayer {
   public void playComposition(Composer c) throws LineUnavailableException {
     open();start();
     var pianoroll = c.pianoRollLines();
-    System.out.println(c.pianoRollHeader(5));
+//    System.out.println(c.pianoRollHeader(5));
     for (int tick = 0; tick < c.ticks(); tick++) {
       ArrayList<Integer> notesThisTick = c.getNotes(tick);
-      System.out.printf("%3d: %s  ",tick,pianoroll[tick]);
+//      System.out.printf("%3d: %s  ",tick,pianoroll[tick]);
       ArrayList<Sinewave> wavesThisTick = new ArrayList<>();
-      for (Integer noteval : notesThisTick) wavesThisTick.add(new Sinewave(noteval));
+      wavesThisTick.add(new Sinewave(notesThisTick.get(0)));
+//      System.out.println(wavesThisTick);
+//      for (Integer noteval : notesThisTick) wavesThisTick.add(new Sinewave(noteval));
       for (Integer noteval : notesThisTick) {
-        System.out.print(new Note(noteval)+" ");
+//        System.out.print(new Note(noteval)+" ");
       }
-      System.out.println();
+//      System.out.println();
       MergedWave mWave = new MergedWave(wavesThisTick);
-
-//      send(mWave,1);
+      System.out.println(mWave);
+      send(mWave,1);
 
     }
   }
